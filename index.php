@@ -102,11 +102,11 @@
       }
 
 
-      if($email === "admin@example.com" && $password === "123456") {
-          echo "<div class='message' style='color: green;'>Login Successful!</div>";
-      } else {
-          echo "<div class='message'>Invalid email or password!</div>";
-      }
+      // if($email === "admin@example.com" && $password === "123456") {
+      //     echo "<div class='message' style='color: green;'>Login Successful!</div>";
+      // } else {
+      //     echo "<div class='message'>Invalid email or password!</div>";
+      // }
   }
 ?>
 
@@ -114,7 +114,7 @@
     <div class="login-container">
       <h2>Login</h2>
 
-      <form id="loginForm" method="POST" action="login.php">
+      <form id="loginForm" method="POST" action="index.php">
         <div class="input-group">
           <label>Email</label>
           <input type="email" id="email" name="email" placeholder="Enter email" required />
