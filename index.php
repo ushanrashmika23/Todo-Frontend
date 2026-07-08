@@ -82,6 +82,7 @@
     </style>
   </head>
 
+  <? require_once './config/db.php'; ?>
 
   <?php
 
@@ -89,13 +90,25 @@
       $email = $_POST['email'];
       $password = $_POST['password'];
 
+      $sql="SELECT * FROM users WHERE email = '$email' AND password = '$password'";
+
+      $result = mysqli_query($conn, $sql);
+
+      if(mysqli_num_rows($result) > 0) {
+          header("Location: dashboard.php");
+          exit();
+      } else {
+          echo "<div class='message'>Invalid email or password!</div>";
+      }
+
+
       if($email === "admin@example.com" && $password === "123456") {
           echo "<div class='message' style='color: green;'>Login Successful!</div>";
       } else {
           echo "<div class='message'>Invalid email or password!</div>";
       }
   }
-
+?>
 
   <body>
     <div class="login-container">
@@ -104,7 +117,7 @@
       <form id="loginForm" method="POST" action="login.php">
         <div class="input-group">
           <label>Email</label>
-          <input type="email" id="email" placeholder="Enter email" required />
+          <input type="email" id="email" name="email" placeholder="Enter email" required />
         </div>
 
         <div class="input-group">
@@ -112,6 +125,7 @@
           <input
             type="password"
             id="password"
+            name="password"
             placeholder="Enter password"
             required
           />
