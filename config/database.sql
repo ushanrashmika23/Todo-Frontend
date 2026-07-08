@@ -49,3 +49,16 @@ CREATE TABLE todos (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+
+--============================
+
+INSERT INTO users (name, email, password) VALUES
+('John Doe', 'john@example.com', 'john123'),
+('Alice Johnson', 'alice@example.com', 'alice123'),
+('Bob Smith', 'bob@example.com', 'bob123'),
+('Emma Wilson', 'emma@example.com', 'emma123'),
+('Michael Brown', 'michael@example.com', 'michael123'),
+('Sophia Davis', 'sophia@example.com', 'sophia123'),
+('Daniel Taylor', 'daniel@example.com', 'daniel123'),
+('Olivia Martin', 'olivia@example.com', 'olivia123');
