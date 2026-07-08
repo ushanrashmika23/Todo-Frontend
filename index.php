@@ -1,141 +1,130 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login Form</title>
+<?php
+require_once "./config/db.php";
 
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: Arial, sans-serif;
-      }
+$message = "";
 
-      body {
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background: linear-gradient(135deg, #4facfe, #00f2fe);
-      }
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-      .login-container {
-        background: white;
-        padding: 40px;
-        width: 320px;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      }
+    $email = $_POST['email'];
+    $password = $_POST['password'];
 
-      .login-container h2 {
-        text-align: center;
-        margin-bottom: 25px;
-        color: #333;
-      }
+    $sql = "SELECT * FROM users WHERE email='$email' AND password='$password'";
 
-      .input-group {
-        margin-bottom: 20px;
-      }
+    $result = mysqli_query($conn, $sql);
 
-      .input-group label {
-        display: block;
-        margin-bottom: 6px;
-        color: #555;
-      }
+    // Check SQL query
+    if (!$result) {
+        die("SQL Error: " . mysqli_error($conn));
+    }
 
-      .input-group input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        outline: none;
-        transition: 0.3s;
-      }
-
-      .input-group input:focus {
-        border-color: #4facfe;
-      }
-
-      .login-btn {
-        width: 100%;
-        padding: 10px;
-        background: #4facfe;
-        border: none;
-        color: white;
-        font-size: 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: 0.3s;
-      }
-
-      .login-btn:hover {
-        background: #2196f3;
-      }
-
-      .message {
-        margin-top: 15px;
-        text-align: center;
-        color: red;
-      }
-    </style>
-  </head>
-
-  <? require_once './config/db.php'; ?>
-
-  <?php
-
-  if(isset($_POST['email']) && isset($_POST['password'])) {
-      $email = $_POST['email'];
-      $password = $_POST['password'];
-
-      $sql="SELECT * FROM users WHERE email = '$email' AND password = '$password'";
-
-      $result = mysqli_query($conn, $sql);
-
-      if(mysqli_num_rows($result) > 0) {
-          header("Location: dashboard.php");
-          exit();
-      } else {
-          echo "<div class='message'>Invalid email or password!</div>";
-      }
-
-
-      // if($email === "admin@example.com" && $password === "123456") {
-      //     echo "<div class='message' style='color: green;'>Login Successful!</div>";
-      // } else {
-      //     echo "<div class='message'>Invalid email or password!</div>";
-      // }
-  }
+    if (mysqli_num_rows($result) > 0) {
+        header("Location: dashboard.php");
+        exit();
+    } else {
+        $message = "Invalid email or password!";
+    }
+}
 ?>
 
-  <body>
-    <div class="login-container">
-      <h2>Login</h2>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Form</title>
 
-      <form id="loginForm" method="POST" action="index.php">
-        <div class="input-group">
-          <label>Email</label>
-          <input type="email" id="email" name="email" placeholder="Enter email" required />
-        </div>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
 
-        <div class="input-group">
-          <label>Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter password"
-            required
-          />
-        </div>
+body{
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#4facfe,#00f2fe);
+}
 
-        <button type="submit" class="login-btn">Login</button>
+.login-container{
+    background:#fff;
+    padding:40px;
+    width:320px;
+    border-radius:12px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
 
-        <div class="message" id="message"></div>
-      </form>
-    </div>
+.login-container h2{
+    text-align:center;
+    margin-bottom:25px;
+}
 
-  </body>
+.input-group{
+    margin-bottom:20px;
+}
+
+.input-group label{
+    display:block;
+    margin-bottom:6px;
+}
+
+.input-group input{
+    width:100%;
+    padding:10px;
+    border:1px solid #ccc;
+    border-radius:6px;
+}
+
+.login-btn{
+    width:100%;
+    padding:10px;
+    border:none;
+    border-radius:6px;
+    background:#4facfe;
+    color:white;
+    cursor:pointer;
+}
+
+.message{
+    margin-top:15px;
+    text-align:center;
+    color:red;
+}
+</style>
+
+</head>
+<body>
+
+<div class="login-container">
+
+<h2>Login</h2>
+
+<form method="POST">
+
+<div class="input-group">
+<label>Email</label>
+<input type="email" name="email" required>
+</div>
+
+<div class="input-group">
+<label>Password</label>
+<input type="password" name="password" required>
+</div>
+
+<button class="login-btn" type="submit">Login</button>
+
+<?php
+if($message!=""){
+    echo "<div class='message'>$message</div>";
+}
+?>
+
+</form>
+
+</div>
+
+</body>
 </html>
