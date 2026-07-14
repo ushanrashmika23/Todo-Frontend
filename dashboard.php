@@ -280,6 +280,18 @@
             transform: translateX(-50%);
         }
 
+        .calendar-total {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.45);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 8px;
+            display: none;
+        }
+
         .calendar-days button.has-expense .calendar-dot {
             display: block;
         }
@@ -535,28 +547,26 @@
 
             <section class="summary-grid">
                 <div class="summary-card">
-                    <div class="label">Expenses</div>
-                    <div class="value" id="expensesValue">$0.00</div>
+                    <div class="label">Add Budget</div>
+                    <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                        <select id="budgetTypeSelect" style="flex:1; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.08); color:white;">
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                        <input id="budgetAmount" type="number" step="0.01" placeholder="0.00" style="width:120px; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.04); color:white; text-align:right;" />
+                    </div>
+                    <button id="saveBudgetBtn" class="logout-btn" style="margin-top:10px; padding:8px 10px;">Save Budget</button>
                 </div>
-                <div class="summary-card">
-                    <div class="label">Remaining Balance</div>
-                    <div class="value" id="remainingBalanceValue">$0.00</div>
-                    <select id="balanceFilter" style="margin-top:10px; width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.08); color:white;">
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                    </select>
-                </div>
+
                 <div class="summary-card">
                     <div class="label">Today's Expenses</div>
                     <div class="value" id="todayExpensesValue">$0.00</div>
                 </div>
+
                 <div class="summary-card">
-                    <div class="label">Expenses Filter</div>
-                    <div class="value" id="expensesFilterValue">$0.00</div>
-                    <select id="expenseFilter" style="margin-top:10px; width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.16); background:rgba(255,255,255,0.08); color:white;">
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                    </select>
+                    <div class="label">Remaining Budget</div>
+                    <div class="value" id="remainingBudgetValue">$0.00</div>
+                    <div style="margin-top:8px; color:var(--muted); font-size:0.9rem;" id="remainingPeriodLabel">Using: Weekly</div>
                 </div>
             </section>
 
@@ -589,8 +599,6 @@
                 <div class="expenses-card">
                     <h3 id="dailySummaryTitle">Daily Summary</h3>
                     <div id="dailySummaryContent" class="expense-list"></div>
-                    <h3 style="margin-top: 18px;">Recent Expenses</h3>
-                    <div class="expense-list" id="expenseList"></div>
                 </div>
             </section>
         </main>

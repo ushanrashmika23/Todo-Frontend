@@ -55,11 +55,32 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (!data.success) return;
 
-            const datesWithExpenses = new Set(data.expenses.map((expense) => expense.date_key));
+            // Build totals per date
+            const totals = {};
+            data.expenses.forEach((expense) => {
+                const key = expense.date_key;
+                const amt = parseFloat(expense.amount) || 0;
+                if (!totals[key]) totals[key] = 0;
+                totals[key] += amt;
+            });
+
             document.querySelectorAll('#calendarDays button').forEach((button) => {
                 const buttonDate = button.dataset.date;
-                if (buttonDate && datesWithExpenses.has(buttonDate)) {
+                // remove existing total badge if any
+                const existing = button.querySelector('.calendar-total');
+                if (existing) existing.remove();
+
+                if (buttonDate && totals[buttonDate]) {
                     button.classList.add('has-expense');
+                    const badge = document.createElement('span');
+                    badge.className = 'calendar-total';
+                    // format with 2 decimals
+                    badge.textContent = `$${Number(totals[buttonDate]).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    badge.style.display = 'inline-block';
+                    button.appendChild(badge);
+                } else {
+                    // ensure class removed when no expenses
+                    button.classList.remove('has-expense');
                 }
             });
         } catch (error) {

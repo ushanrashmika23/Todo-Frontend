@@ -12,13 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const expenseDateDisplay = document.getElementById('expenseDateDisplay');
     const expenseDateValue = document.getElementById('expenseDateValue');
     const expenseForm = document.getElementById('expenseForm');
-    const expenseList = document.getElementById('expenseList');
     const toastContainer = document.getElementById('toastContainer');
     const dailySummaryContent = document.getElementById('dailySummaryContent');
     const dailySummaryTitle = document.getElementById('dailySummaryTitle');
     const openExpenseModalBtn = document.getElementById('openExpenseModalBtn');
-    const balanceFilter = document.getElementById('balanceFilter');
-    const expenseFilter = document.getElementById('expenseFilter');
+    const budgetTypeSelect = document.getElementById('budgetTypeSelect');
+    const budgetAmountInput = document.getElementById('budgetAmount');
+    const saveBudgetBtn = document.getElementById('saveBudgetBtn');
+    const remainingPeriodLabel = document.getElementById('remainingPeriodLabel');
+    const budgetTypeDefault = localStorage.getItem('currentBudgetType') || 'weekly';
 
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     currentDate.textContent = today.toLocaleDateString('en-US', options);
@@ -73,75 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function refreshDashboard() {
         try {
-            const balancePeriod = balanceFilter.value;
-            const expensePeriod = expenseFilter.value;
-            const [balanceResponse, expenseResponse] = await Promise.all([
-                fetch(`./api/update_dashboard.php?period=${balancePeriod}`),
-                fetch(`./api/update_dashboard.php?period=${expensePeriod}`)
-            ]);
-
-            const balanceData = await balanceResponse.json();
-            const expenseData = await expenseResponse.json();
-
-            if (!balanceData.success || !expenseData.success) {
-                throw new Error('Unable to load dashboard data.');
-            }
-
-            document.getElementById('remainingBalanceValue').textContent = `$${Number(balanceData.remaining_balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            document.getElementById('expensesValue').textContent = `$${Number(expenseData.expenses).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            document.getElementById('expensesFilterValue').textContent = `$${Number(expenseData.expenses).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            // Update today's expenses (for selected date) and remaining budget
             document.getElementById('todayExpensesValue').textContent = `$${Number(await getTodayExpenses()).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            await updateRemainingBudget();
         } catch (error) {
             console.error(error);
         }
     }
 
     async function getTodayExpenses() {
-        const response = await fetch('./api/get_daily_summary.php?date=' + formatToDateInput(new Date()));
+        // Use the currently selected date (not always today's date)
+        const response = await fetch('./api/get_daily_summary.php?date=' + selectedDate);
         const data = await response.json();
         return data.success ? data.total : '0.00';
     }
 
-    async function refreshExpenses() {
-        try {
-            const response = await fetch('./api/get_expenses.php');
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || 'Unable to load expenses.');
-            }
-
-            expenseList.innerHTML = '';
-
-            if (!data.expenses.length) {
-                const empty = document.createElement('div');
-                empty.className = 'empty-state';
-                empty.textContent = 'No expenses yet. Add your first expense to get started.';
-                expenseList.appendChild(empty);
-                return;
-            }
-
-            const fragment = document.createDocumentFragment();
-
-            data.expenses.forEach((expense) => {
-                const item = document.createElement('div');
-                item.className = 'expense-item';
-                item.innerHTML = `
-                    <div class="expense-info">
-                        <strong>${expense.category}</strong>
-                        <span>${expense.description}</span>
-                        <span>${expense.date} • ${expense.payment_method}</span>
-                    </div>
-                    <div class="expense-amount">-$${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                `;
-                fragment.appendChild(item);
-            });
-
-            expenseList.appendChild(fragment);
-        } catch (error) {
-            console.error(error);
-        }
-    }
+    // Recent expenses list removed — Daily Summary now provides the date-specific table and totals.
 
     async function refreshDailySummary() {
         try {
@@ -155,24 +104,15 @@ document.addEventListener('DOMContentLoaded', () => {
             dailySummaryContent.innerHTML = '';
 
             if (!data.expenses.length) {
-                dailySummaryContent.innerHTML = '<div class="empty-state">No expenses for this day.</div>';
+                dailySummaryContent.innerHTML = '<div class="empty-state">No expenses for this day.</div>' +
+                    '<div style="margin-top:12px; font-weight:700;">Total Expenses: $0.00</div>';
                 return;
             }
-
-            const summaryHeader = document.createElement('div');
-            summaryHeader.innerHTML = `
-                <div class="summary-card" style="margin-bottom: 10px; padding: 12px;">
-                    <div class="label">Total Expenses</div>
-                    <div class="value">$${Number(data.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                    <div class="label" style="margin-top: 8px;">Transactions: ${data.transactions}</div>
-                </div>
-            `;
-            dailySummaryContent.appendChild(summaryHeader.firstChild);
 
             const table = document.createElement('table');
             table.style.width = '100%';
             table.style.borderCollapse = 'collapse';
-            table.innerHTML = '<thead><tr><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Category</th><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Description</th><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Payment</th><th style="text-align:right; padding:6px 0; color:#a8b4c7;">Amount</th></tr></thead><tbody></tbody>';
+            table.innerHTML = '<thead><tr><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Category</th><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Description</th><th style="text-align:left; padding:6px 0; color:#a8b4c7;">Payment Method</th><th style="text-align:right; padding:6px 0; color:#a8b4c7;">Amount</th></tr></thead><tbody></tbody>';
             const tbody = table.querySelector('tbody');
             data.expenses.forEach((expense) => {
                 const row = document.createElement('tr');
@@ -180,13 +120,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbody.appendChild(row);
             });
             dailySummaryContent.appendChild(table);
+
+            const totalDiv = document.createElement('div');
+            totalDiv.style.marginTop = '12px';
+            totalDiv.style.fontWeight = '700';
+            totalDiv.textContent = `Total Expenses: $${Number(data.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            dailySummaryContent.appendChild(totalDiv);
         } catch (error) {
             console.error(error);
         }
     }
 
+    async function loadBudgets() {
+        try {
+            const res = await fetch('./api/get_budget.php');
+            const data = await res.json();
+            if (!data.success) return {};
+            return data.budgets || {};
+        } catch (e) {
+            console.error(e);
+            return {};
+        }
+    }
+
+    async function saveBudget(type, amount) {
+        try {
+            const res = await fetch('./api/save_budget.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, amount })
+            });
+            return await res.json();
+        } catch (e) {
+            console.error(e);
+            return { success: false };
+        }
+    }
+
+    async function updateRemainingBudget() {
+        try {
+            const currentType = localStorage.getItem('currentBudgetType') || budgetTypeDefault || 'weekly';
+            // load saved budget amount
+            const budgetRes = await fetch('./api/get_budget.php?type=' + currentType);
+            const budgetData = await budgetRes.json();
+            const budgetAmount = budgetData.success ? parseFloat(budgetData.amount) : 0;
+
+            // get expenses for period using existing API
+            const periodRes = await fetch(`./api/update_dashboard.php?period=${currentType}`);
+            const periodData = await periodRes.json();
+            const periodExpenses = periodData.success ? parseFloat(periodData.expenses) : 0;
+
+            const remaining = budgetAmount - periodExpenses;
+
+            document.getElementById('remainingBudgetValue').textContent = `$${Number(remaining).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            remainingPeriodLabel.textContent = `Using: ${currentType.charAt(0).toUpperCase() + currentType.slice(1)}`;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     async function refreshAll() {
-        await Promise.all([refreshDashboard(), refreshExpenses(), refreshDailySummary()]);
+        await Promise.all([refreshDashboard(), refreshDailySummary()]);
         window.dispatchEvent(new Event('expense-updated'));
     }
 
@@ -200,8 +194,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     openExpenseModalBtn.addEventListener('click', () => openExpenseModal(new Date(selectedDate)));
 
-    balanceFilter.addEventListener('change', refreshDashboard);
-    expenseFilter.addEventListener('change', refreshDashboard);
+    // Initialize budget controls
+    (async () => {
+        budgetTypeSelect.value = budgetTypeDefault;
+        localStorage.setItem('currentBudgetType', budgetTypeDefault);
+        const budgets = await loadBudgets();
+        if (budgets[budgetTypeDefault]) {
+            budgetAmountInput.value = budgets[budgetTypeDefault];
+        } else {
+            budgetAmountInput.value = '';
+        }
+        await updateRemainingBudget();
+    })();
+
+    saveBudgetBtn.addEventListener('click', async () => {
+        const type = budgetTypeSelect.value;
+        const amount = parseFloat(budgetAmountInput.value) || 0;
+        const res = await saveBudget(type, amount);
+        if (res.success) {
+            showToast('Budget saved.');
+            localStorage.setItem('currentBudgetType', type);
+            await refreshAll();
+        } else {
+            showToast(res.message || 'Unable to save budget.', 'error');
+        }
+    });
 
     expenseForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -240,7 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('day-selected', (event) => {
         selectedDate = event.detail.date;
-        refreshDailySummary();
+        // Refresh everything that depends on the selected date
+        refreshAll();
     });
 
     refreshAll();

@@ -3,13 +3,22 @@ header('Content-Type: application/json');
 
 require_once __DIR__ . '/../database/db.php';
 
-$query = "
-    SELECT id, expense_date, category, description, amount, payment_method, created_at
-    FROM expenses
-    ORDER BY created_at DESC, id DESC
-";
+// Optional date filter (YYYY-MM-DD)
+$date = $_GET['date'] ?? null;
 
-$result = mysqli_query($conn, $query);
+if ($date) {
+    $stmt = mysqli_prepare($conn, "SELECT id, expense_date, category, description, amount, payment_method, created_at FROM expenses WHERE expense_date = ? ORDER BY created_at DESC, id DESC");
+    if (!$stmt) {
+        echo json_encode(['success' => false, 'message' => 'Unable to prepare expenses query.']);
+        exit;
+    }
+    mysqli_stmt_bind_param($stmt, 's', $date);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+} else {
+    $query = "SELECT id, expense_date, category, description, amount, payment_method, created_at FROM expenses ORDER BY created_at DESC, id DESC";
+    $result = mysqli_query($conn, $query);
+}
 
 if (!$result) {
     echo json_encode(['success' => false, 'message' => 'Unable to load expenses.']);

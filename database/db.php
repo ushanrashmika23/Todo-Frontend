@@ -67,9 +67,26 @@ function ensure_incomes_table($conn)
     }
 }
 
+function ensure_budgets_table($conn)
+{
+    $sql = "
+        CREATE TABLE IF NOT EXISTS budgets (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            `type` VARCHAR(10) NOT NULL UNIQUE,
+            amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ";
+
+    if (!mysqli_query($conn, $sql)) {
+        throw new Exception('Unable to create budgets table: ' . mysqli_error($conn));
+    }
+}
+
 try {
     ensure_expenses_table($conn);
     ensure_incomes_table($conn);
+    ensure_budgets_table($conn);
 
     $incomeCheck = mysqli_query($conn, 'SELECT COUNT(*) AS total FROM incomes');
     if ($incomeCheck) {
