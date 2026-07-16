@@ -1,6 +1,7 @@
 <?php
 require_once "./config/db.php";
 
+
 $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
